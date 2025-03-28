@@ -1,0 +1,272 @@
+<html>
+<head>
+	<title>Task B.1</title>
+	<style>
+		#middleLine {
+			position:fixed;
+			left: 0%;
+			top: 50%;
+			margin: 0 0 0 0;
+		}
+		#myCanvas {
+			position:fixed;
+			left: 0%;
+			top: 50%;
+			margin: 0 0 0 0;
+		}
+	</style>
+</head>
+<body>
+	<button id="startButton">Starten</button>
+	<p id="test"></p>
+	<p id="pos"></p>
+	<canvas id="myCanvas" height=60, width=100%></canvas>
+
+	<script type="text/javascript">
+		var counter20 = 0, counter40 = 0, counter60  = 0, counter80 = 0, counter100 = 0;
+		var w=window,d=document,e=d.documentElement,g=d.getElementsByTagName('body')[0],x=w.innerWidth||e.clientWidth||g.clientWidth,y=w.innerHeight||e.clientHeight||g.clientHeight;
+		var currentX = 0;
+		var rectHeight=0;
+		var rectWidth=0;
+		var lastRectHeight = 0;
+		var lastRectWidth = 0;
+		var rectangles = [];
+		var times = [];
+		var timerStartTime = 0;
+		document.getElementById("startButton").addEventListener("click", runExperiment);
+		document.getElementById("myCanvas").addEventListener("click", rectClicked);
+		
+		function runExperiment(){
+			document.getElementById("test").innerHTML = "Wiederholung: " + counter20 + ","+ counter40 + ","+ counter60 + ","+ counter80 + ","+ counter100;
+			var c = document.getElementById("myCanvas");
+			c.width = x;
+			var context = c.getContext("2d");
+			context.beginPath();
+			context.moveTo(0,30);
+			context.lineTo(c.width,30);
+			context.stroke();
+			context.fillStyle = "#FF0000";
+			displayRectangle();
+			document.getElementById("test").innerHTML = "Wiederholung: " + sumCounters();
+			document.getElementById("startButton").style.display = "none";
+		}
+		
+		function stopExperiment(){
+			var c = document.getElementById("myCanvas");
+			var context = c.getContext("2d");
+			context.clearRect(0,0, c.width, c.height);
+			counter20 = 0, counter40 = 0, counter60  = 0, counter80 = 0, counter100 = 0;
+			currentX = 0;
+			rectHeight = 0;
+			rectWidth = 0;
+			lastRectHeight = 0;
+			lastRectWidth = 0;
+			document.getElementById("startButton").style.display = "initial";
+			document.getElementById("test").innerHTML = "";
+			document.getElementById("pos").innerHTML = "";
+			console.save(rectangles, "rectangles_experiment_b_1.json");
+			console.save(times, "times_experiment_b_1.json");
+			rectangles = [];
+			times = [];
+			timerStartTime = 0;
+		}
+		/**
+		* Save respones times in ms
+		**/
+		function saveTimes(timerStartTime, timerEndTime){
+			times.push(timerEndTime-timerStartTime);
+			console.log(timerEndTime-timerStartTime);
+		}
+		
+		function sumCounters (){
+			return counter20+counter40+counter60+counter80+counter100;
+		}
+		
+		/**
+		' Save rectangle locations in object array
+		**/
+		function saveRectLocation(rectX, rectY, rectHeight, rectWidth){
+			var rect = {};
+			rect.x = rectX;
+			rect.y = rectY;
+			rect.height = rectHeight;
+			rect.width = rectWidth;
+			rectangles.push(rect);
+			console.log(JSON.stringify(rect));
+		}
+		
+		/**
+		* Display rectangle on canvas
+		**/
+		function displayRectangle(){
+			switch(selectRectangleSize()){
+				case 1:
+					lastRectHeight = rectHeight;
+					lastRectWidth = rectWidth;
+					rectHeight = 10;
+					rectWidth = 20;
+					break;
+				case 2:
+					lastRectHeight = rectHeight;
+					lastRectWidth = rectWidth;				
+					rectHeight = 20;
+					rectWidth = 40;
+					break;
+				case 3:
+					lastRectHeight = rectHeight;
+					lastRectWidth = rectWidth;
+					rectHeight = 30;
+					rectWidth = 60;
+					break;
+				case 4:
+					lastRectHeight = rectHeight;
+					lastRectWidth = rectWidth;
+					rectHeight = 40;
+					rectWidth = 80;
+					break;
+				case 5:					
+					lastRectHeight = rectHeight;
+					lastRectWidth = rectWidth;
+					rectHeight = 50;
+					rectWidth = 100;
+					break;
+				default:
+					return;
+			}
+			console.log(sumCounters(counter20,counter40,counter60,counter80,counter100));
+			if(sumCounters(counter20,counter40,counter60,counter80,counter100)>0){
+				var rectX = calcNextRectPos(rectWidth);
+			}else if(sumCounters(counter20,counter40,counter60,counter80,counter100)==0){
+				var rectX = (Math.random()*(x-rectWidth)+rectWidth);
+			}else{
+				return;
+			}
+			var c = document.getElementById("myCanvas");
+			var context = c.getContext("2d");
+			var rectY = (30-(rectHeight/2))
+			saveRectLocation(rectX, rectY, rectHeight, rectWidth);
+			timerStartTime = new Date().getTime();
+			context.fillRect(rectX, rectY, rectWidth, rectHeight);
+			
+		}
+		
+		/**
+		* Calculate next correct X Position for rectangle
+		**/
+		function calcNextRectPos(rectWidth){
+			correctPosition = false;
+			var cWidth = document.getElementById("myCanvas").width;
+			var nextX = 0;
+			while(!correctPosition){
+				nextX = (Math.round(Math.random()*(x-rectWidth)+rectWidth));
+				if((nextX-30>currentX+lastRectWidth || (nextX+rectWidth)+30<currentX+lastRectWidth)&&(nextX+rectWidth)<cWidth){
+					correctPosition = true;
+					currentX = nextX;
+				}
+			}
+			return nextX;
+		}
+		
+		/**
+		* select rectangle size randomly but max. 10 times per size
+		**/
+		function selectRectangleSize(){
+			var correctSize = false;
+			var selectedSize = 0;
+			while(!correctSize){
+				selectedSize = Math.round((Math.random()*4)+1);
+				switch(selectedSize){
+					case 1:
+						if(counter20<10){
+							counter20++;
+							selectedSize = 1;
+							correctSize = true;
+						}
+						break;
+					case 2:
+						if(counter40<10){
+							counter40++;
+							selectedSize = 2;
+							correctSize = true;
+						}
+						break;
+					case 3:
+						if(counter60<10){
+							counter60++;
+							selectedSize = 3;
+							correctSize = true;
+						}
+						break;
+					case 4:
+						if(counter80<10){
+							counter80++;
+							selectedSize = 4;
+							correctSize = true;
+						}
+						break;
+					case 5:
+						if(counter100<10){
+							counter100++;
+							selectedSize = 5;
+							correctSize = true;
+						}
+						break;
+				}
+			}
+			console.log(selectedSize);
+			return selectedSize;
+		}
+		
+		function rectClicked(e){
+			var c = document.getElementById("myCanvas");
+			var  cBoundingRect = c.getBoundingClientRect();
+			var cPosX = cBoundingRect.left;
+			var cPosY = cBoundingRect.top;
+			var posX = e.pageX;
+			var posY = e.pageY;
+			var wasRect = false;
+			if(posX > currentX && posX< currentX + rectWidth && posY > cPosY+((c.height-rectHeight)/2) && posY < cPosY+((c.height-rectHeight)/2)+rectHeight){
+				wasRect=true;
+			}
+			if(wasRect && sumCounters()<50){
+				saveTimes(timerStartTime, new Date().getTime());
+				runExperiment();
+			}else if(wasRect && sumCounters()==50){
+				saveTimes(timerStartTime, new Date().getTime());
+				stopExperiment();
+			}
+			document.getElementById("test").innerHTML = "Wiederholung: " + sumCounters();
+			document.getElementById("pos").innerHTML = "PosX: " +  posX.toString() + " PosY: " + posY.toString()+ " Rect? " + wasRect + " cX "+cPosX+" cY "+cPosY + " currentX " + currentX;
+			
+		}
+		
+		(function(console){
+
+			console.save = function(data, filename){
+
+			if(!data) {
+				console.error('Console.save: No data')
+			return;
+			}
+
+			if(!filename) filename = 'console.json'
+
+			if(typeof data === "object"){
+				data = JSON.stringify(data, undefined, 4)
+			}
+
+			var blob = new Blob([data], {type: 'text/json'}),
+			e    = document.createEvent('MouseEvents'),
+			a    = document.createElement('a')
+
+			a.download = filename
+			a.href = window.URL.createObjectURL(blob)
+			a.dataset.downloadurl =  ['text/json', a.download, a.href].join(':')
+			e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+			a.dispatchEvent(e)
+			}
+		})(console)
+	</script>
+</body>
+
+</html>
